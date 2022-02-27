@@ -1,3 +1,8 @@
+/*
+    语音系统在Windows中采用原生TTS库，Linux、macOS等其他系统中会调用espeak-ng命令，所以需要安装espeak-ng包
+    Discord消息发送功能需要一个中间服务器，如果网络环节通畅可以考虑直接在本机localhost运行中间服务器
+ */
+
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -10,6 +15,9 @@ using System.Text;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Runtime.InteropServices;
+using System.IO;
+//using System.Diagnostics;
 
 public class mind_script : MonoBehaviour
 {
@@ -66,8 +74,12 @@ public class mind_script : MonoBehaviour
         head = new BinaryTree();
         int depth = 1;
         BinaryTree.Build(head, queue, depth, 6);
-        head.right.right.left = new BinaryTree() { data = "Discord" };
-        head.right.right.right = new BinaryTree() { data = "\\" };
+        head.right.right.left = new BinaryTree() { left = new BinaryTree() { data = "Discord" },
+                                                    right=new BinaryTree() { data = "Clear"}
+        };
+        head.right.right.right = new BinaryTree() { left = new BinaryTree() { data = "\\" }, 
+                                                    right = new BinaryTree() { data="Speek"} 
+        };
 
         current = head;
         show(current);
@@ -124,6 +136,12 @@ public class mind_script : MonoBehaviour
             Linux(msg.text);
         }
 
+        // Test
+        if (Input.GetKeyUp(KeyCode.V))
+        {
+            Speeker.Speek(msg.text);
+        }
+
         if (received)
         {
             if (confirmed == false)
@@ -163,7 +181,7 @@ public class mind_script : MonoBehaviour
         StopCoroutine(main);
         confirmed = true;
 
-        
+
 
 
         if (index == 1)
@@ -235,6 +253,13 @@ public class mind_script : MonoBehaviour
                     return true;
                 case "Space":
                     msg.text += " ";    // 空格
+                    return true;
+                case "Speek":           // TTS语音合成系统
+                    Speeker.Speek(msg.text);
+                    //msg.text = "";
+                    return true;
+                case "Clear":
+                    msg.text = "";
                     return true;
                 default:
                     return false;
@@ -328,6 +353,60 @@ public class mind_script : MonoBehaviour
         {
             this.text = text;
             this.key = key;
+        }
+    }
+
+    static class Speeker
+    {
+        static public void Speek(string message)
+        {
+
+            string err = "Do not include special character 请不要包含特殊字符";
+            var p = new System.Diagnostics.Process();
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // tts.ps1 
+                string content = @"param(
+    # Parameter help description
+    [Parameter()]
+    [string]
+    $message
+)
+Add-Type -AssemblyName System.Speech
+$Speech = New-Object System.Speech.Synthesis.SpeechSynthesizer
+$Speech.Speak($message)";
+                Console.WriteLine(content);
+
+                if (File.Exists("tts.ps1"))
+                {
+                    Console.WriteLine(Directory.GetCurrentDirectory());
+                }
+                else
+                {
+                    // Write file
+                    using (StreamWriter sw = new StreamWriter("tts.ps1"))
+                    {
+                        sw.Write(content);
+                    }
+                }
+                p.StartInfo.FileName = "powershell";
+                p.StartInfo.Arguments = $@"powershell -ExecutionPolicy Bypass -File .\tts.ps1 '{message}'";
+                p.StartInfo.CreateNoWindow = true;
+                p.StartInfo.UseShellExecute = false;
+            }
+            else
+            {
+                p.StartInfo.FileName = "espeak-ng";
+                p.StartInfo.Arguments = $@" -vzh '{message}'";
+            }
+
+            p.Start();
+            p.WaitForExit();
+            if (p.ExitCode == 1)
+            {
+                p.StartInfo.Arguments = $@"powershell -ExecutionPolicy Bypass -File .\tts.ps1 '{err}'";
+                p.Start();
+            }
         }
     }
 }

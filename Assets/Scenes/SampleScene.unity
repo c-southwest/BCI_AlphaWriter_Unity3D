@@ -590,7 +590,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: ifconfig
+  m_Text: southwest university
 --- !u!222 &1234585537
 CanvasRenderer:
   m_ObjectHideFlags: 0
