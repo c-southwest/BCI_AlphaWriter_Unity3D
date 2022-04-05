@@ -36,9 +36,9 @@ public class mind_script : MonoBehaviour
     bool received = false;
     byte[] buffer = new byte[2048];
     // Discord bot server
-    public string bot_post_url = "https://localhost/send";
+    public string bot_post_url;//= "https://43.135.6.253/send";
     // Linux 
-    public string linux_host = "root@fedora";
+    public string linux_host;// = Environment.GetEnvironmentVariable("LINUX_HOST"); //"root@fedora";
     void Start()
     {
         index = 0;
@@ -46,6 +46,9 @@ public class mind_script : MonoBehaviour
         text_linux = GameObject.Find("Text_Linux").GetComponent<Text>();
         back = GameObject.Find("Text_back").GetComponent<Text>();
         main = StartCoroutine(Loop());
+        linux_host = Environment.GetEnvironmentVariable("LINUX_HOST");
+        bot_post_url = Environment.GetEnvironmentVariable("BCI_BOT_URL");
+        Debug.Log(bot_post_url); 
         // 建立二叉树
         var queue = new Queue<string>();
         for (int i = 'a'; i <= 'z'; i++)
@@ -312,6 +315,7 @@ public class mind_script : MonoBehaviour
     }
     void Linux(string command)
     {
+        Debug.Log(linux_host); 
         var p = new System.Diagnostics.Process();
         p.StartInfo.FileName = "ssh";
         p.StartInfo.Arguments = $"{linux_host} {command}";
@@ -321,7 +325,15 @@ public class mind_script : MonoBehaviour
         p.Start();
         string output = p.StandardOutput.ReadToEnd();
         p.WaitForExit();
-        text_linux.text = output;
+        
+        if(p.ExitCode == 0)
+        {
+            text_linux.text = output;
+        }
+        else
+        {
+            text_linux.text = "执行失败，请检查";
+        }
     }
     async void Discord(string msg)
     {
