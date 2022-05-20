@@ -1,8 +1,3 @@
-/*
-    语音系统在Windows中采用原生TTS库，Linux、macOS等其他系统中会调用espeak-ng命令，所以需要安装espeak-ng包
-    Discord消息发送功能需要一个中间服务器，如果网络环节通畅可以考虑直接在本机localhost运行中间服务器
- */
-
 using Newtonsoft.Json;
 using System;
 using System.Collections;
@@ -49,7 +44,7 @@ public class mind_script : MonoBehaviour
         linux_host = Environment.GetEnvironmentVariable("LINUX_HOST");
         bot_post_url = Environment.GetEnvironmentVariable("BCI_BOT_URL");
         Debug.Log(bot_post_url); 
-        // 建立二叉树
+        // Build binary tree
         var queue = new Queue<string>();
         for (int i = 'a'; i <= 'z'; i++)
         {
@@ -87,20 +82,20 @@ public class mind_script : MonoBehaviour
         current = head;
         show(current);
 
-        // 实例化socket
+        // Instantiate socket
         Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         socket.Connect(new IPEndPoint(serverAddress, port));
 
-        // 启动socket连接
+        // Start socket connection
         Thread thread;
         thread = new Thread(Connection);
         thread.Start(socket);
     }
 
     /// <summary>
-    /// 将node左右两侧的数据显示到左右两个block中
+    /// Display options based on current node
     /// </summary>
-    /// <param name="node">树节点</param>
+    /// <param name="node">tree node</param>
     void show(BinaryTree node)
     {
         var left = new List<string>();
@@ -112,11 +107,11 @@ public class mind_script : MonoBehaviour
         GameObject.Find("Text_right").GetComponent<Text>().text = string.Join(" ", right);
         if (node.parent is null)
         {
-            back.text = "删除";
+            back.text = "Delete";
         }
         else
         {
-            back.text = "返回上一层";
+            back.text = "Go back";
         }
 
     }
@@ -157,7 +152,7 @@ public class mind_script : MonoBehaviour
     }
 
     /// <summary>
-    /// 用于表示当前选中block的index自增循环
+    /// Selection Polling
     /// </summary>
     /// <returns></returns>
     IEnumerator Loop()
@@ -175,7 +170,7 @@ public class mind_script : MonoBehaviour
     }
 
     /// <summary>
-    /// 停止loop循环，确认当前选中的index，延迟duration时间后重启loop循环
+    /// Stop Loop() and enter confirm state, restart Loop() after duration time.
     /// </summary>
     /// <returns></returns>
     IEnumerator Confirmed()
@@ -244,20 +239,20 @@ public class mind_script : MonoBehaviour
             switch (data)
             {
                 //case "Backspace":
-                //    backspace();    // 删除
+                //    backspace();    // Delete
                 //    return true;
                 case "Linux":
-                    Linux(msg.text);    // 执行Linux命令
+                    Linux(msg.text);    // Execute Linux command
                     msg.text = "";
                     return true;
                 case "Discord":
-                    Discord(msg.text);  // 向Discord频道发信息
+                    Discord(msg.text);  // Send message to Discord channel
                     msg.text = "";
                     return true;
                 case "Space":
-                    msg.text += " ";    // 空格
+                    msg.text += " ";    // Whitespace
                     return true;
-                case "Speek":           // TTS语音合成系统
+                case "Speek":           // Text-To-Speech
                     Speeker.Speek(msg.text);
                     //msg.text = "";
                     return true;
@@ -278,7 +273,7 @@ public class mind_script : MonoBehaviour
 
     void Connection(object obj)
     {
-        Debug.Log("连接线程启动成功！");
+        Debug.Log("Connection thread started successfully!");
         while (true)
         {
             Socket socket = obj as Socket;
@@ -298,13 +293,13 @@ public class mind_script : MonoBehaviour
                         received = true;
 
                     }
-                    Debug.Log($"接收到数据：{str}");
+                    Debug.Log($"Receive data:{str}");
 
                 }
             }
             catch (Exception e)
             {
-                Debug.Log("发生错误：" + e.Message);
+                Debug.Log("Error: " + e.Message);
             }
         }
 
@@ -332,7 +327,7 @@ public class mind_script : MonoBehaviour
         }
         else
         {
-            text_linux.text = "执行失败，请检查";
+            text_linux.text = "Failed to execute, check please.";
         }
     }
     async void Discord(string msg)
@@ -373,7 +368,7 @@ public class mind_script : MonoBehaviour
         static public void Speek(string message)
         {
 
-            string err = "Do not include special character 请不要包含特殊字符";
+            string err = "Do not include special character";
             var p = new System.Diagnostics.Process();
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
